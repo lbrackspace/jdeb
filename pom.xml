@@ -5,7 +5,7 @@
     <artifactId>jdeb-rs</artifactId>
     <packaging>maven-plugin</packaging>
     <name>jdeb-rs</name>
-    <version>0.0.1-SNAPSHOT</version>
+    <version>1.0.0</version>
     <description>
       This library provides an Ant task and a Maven plugin to create Debian packages from Java builds in a truly cross
       platform manner. Build your Debian packages on any platform that has Java support. Windows, Linux - it does not
@@ -36,6 +36,15 @@
             <email>ebourg at apache.org</email>
             <timezone>+1</timezone>
         </developer>
+
+       <developer>
+           <id>carlos.garza</id>
+           <name>Carlos D. Garza</name>
+           <email>carlos.garza at rackspace.com</email>
+           <roles>
+               <role>code Mangler</role>
+           </roles>
+       </developer>
     </developers>
     <licenses>
         <license>
@@ -149,16 +158,22 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
+
     <distributionManagement>
-        <repository>
-            <id>releases</id>
-            <url>scpexe://vafer.org/var/www/vafer.org/www/repository/releases</url>
-        </repository>
         <snapshotRepository>
-            <id>snaphots</id>
-            <url>scpexe://vafer.org/var/www/vafer.org/www/repository/snapshots</url>
+            <id>rackspacecloud-snapshots</id>
+            <name>Internal RC Snapshot Maven Repo</name>
+            <url>http://cimaster-n01.cloudplatform.rackspace.net:8081/m2/content/repositories/snapshots/</url>
+            <uniqueVersion>false</uniqueVersion>
         </snapshotRepository>
+        <repository>
+            <id>rackspacecloud-releases</id>
+            <name>Internal RC Releases Maven Repo</name>
+            <url>http://cimaster-n01.cloudplatform.rackspace.net:8081/m2/content/repositories/releases/</url>
+        </repository>
     </distributionManagement>
+
+
     <reporting>
         <plugins>
             <plugin>
