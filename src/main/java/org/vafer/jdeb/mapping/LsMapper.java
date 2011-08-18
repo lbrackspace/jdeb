@@ -25,6 +25,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.tools.tar.TarEntry;
+import org.vafer.jdeb.utils.Utils;
 
 /**
  * Reads permissions and ownerships from a "ls -laR > mapping.txt" dump and
@@ -32,10 +33,9 @@ import org.apache.tools.tar.TarEntry;
  *
  * @author Torsten Curdt <tcurdt@vafer.org>
  */
-public final class LsMapper implements Mapper {
+public final class LsMapper extends PrefixMapper {
 
     private final Map mapping;
-
 
     public final static class ParseError extends Exception {
 
@@ -56,33 +56,33 @@ public final class LsMapper implements Mapper {
         public ParseError(Throwable cause) {
             super(cause);
         }
-
     };
 
-    public LsMapper( final InputStream pInput ) throws IOException, ParseError {
+    public LsMapper(final InputStream pInput, int strip, String prefix) throws IOException, ParseError {
+        super(strip, prefix);
         mapping = parse(pInput);
+
     }
 
     /*
-./trunk/target/test-classes/org/vafer/dependency:
-total 176
-drwxr-xr-x   23 tcurdt  tcurdt   782 Jun 25 03:48 .
-drwxr-xr-x    3 tcurdt  tcurdt   102 Jun 25 03:48 ..
--rw-r--r--    1 tcurdt  tcurdt  2934 Jun 25 03:48 DependenciesTestCase.class
--rw-r--r--    1 tcurdt  tcurdt   786 Jun 25 03:48 JarCombiningTestCase$1.class
--rw-r--r--    1 tcurdt  tcurdt  2176 Jun 25 03:48 WarTestCase.class
-drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
+    ./trunk/target/test-classes/org/vafer/dependency:
+    total 176
+    drwxr-xr-x   23 tcurdt  tcurdt   782 Jun 25 03:48 .
+    drwxr-xr-x    3 tcurdt  tcurdt   102 Jun 25 03:48 ..
+    -rw-r--r--    1 tcurdt  tcurdt  2934 Jun 25 03:48 DependenciesTestCase.class
+    -rw-r--r--    1 tcurdt  tcurdt   786 Jun 25 03:48 JarCombiningTestCase$1.class
+    -rw-r--r--    1 tcurdt  tcurdt  2176 Jun 25 03:48 WarTestCase.class
+    drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
 
-./trunk/target/test-classes/org/vafer/dependency/classes:
+    ./trunk/target/test-classes/org/vafer/dependency/classes:
      */
-
     final private Pattern basePattern = Pattern.compile("^\\./(.*):$");
     final private Pattern totalPattern = Pattern.compile("^total ([0-9]+)$");
-    final private Pattern dirPattern = Pattern.compile("^d([rwx-]{9})\\s+([0-9]+)\\s+(\\S*)\\s+(\\S*)\\s+([0-9]+)\\s+(.*)\\s+[\\.]{1,2}$");
+    final private Pattern dirPattern = Pattern.compile("^d([rwx-]{9})\\s+([0-9]+)\\s+(\\S*)\\s+(\\S*)\\s+([0-9]+)\\s+(.*)\\s+[\\.]{1,2}/?$");
     final private Pattern filePattern = Pattern.compile("^([d-])([rwx-]{9})\\s+([0-9]+)\\s+(\\S*)\\s+(\\S*)\\s+([0-9]+)\\s+(.*)\\s+(.*)$");
     final private Pattern newlinePattern = Pattern.compile("$");
 
-    private String readBase( final BufferedReader reader ) throws IOException, ParseError {
+    private String readNewBase(final BufferedReader reader) throws IOException, ParseError {
         final String line = reader.readLine();
         if (line == null) {
             return null;
@@ -93,17 +93,19 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
         }
         return matcher.group(1);
     }
-
-    private String readTotal( final BufferedReader reader ) throws IOException, ParseError {
+    
+    private String readTotal(final BufferedReader reader) throws IOException, ParseError {
         final String line = reader.readLine();
         final Matcher matcher = totalPattern.matcher(line);
         if (!matcher.matches()) {
-            throw new ParseError("expected total line but got \"" + line + "\"");
+            String format = "expected total line but got \"%s\" Ignoreing since total is not important.";
+            Utils.getLog().info(String.format(format,line));
+            return null;
         }
         return matcher.group(1);
     }
 
-    private TarEntry readDir( final BufferedReader reader, final String base ) throws IOException, ParseError {
+    private TarEntry readDir(final BufferedReader reader, final String base) throws IOException, ParseError {
         final String current = reader.readLine();
         final Matcher currentMatcher = dirPattern.matcher(current);
         if (!currentMatcher.matches()) {
@@ -125,30 +127,29 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
         return entry;
     }
 
-
-    private int convertModeFromString( final String mode ) {
+    private int convertModeFromString(final String mode) {
 
         final char[] m = mode.toCharArray();
         /*
-           -rwxrwxrwx
+        -rwxrwxrwx
 
-           4000    set-user-ID-on-execution bit
-           2000    set-user-ID-on-execution bit
-           1000    sticky bit
-           0400    allow read by owner.
-           0200    allow write by owner.
-           0100    execute / search
-           0040    allow read by group members.
-           0020    allow write by group members.
-           0010    execute / search
-           0004    allow read by others.
-           0002    allow write by others.
-           0001    execute / search
+        4000    set-user-ID-on-execution bit
+        2000    set-user-ID-on-execution bit
+        1000    sticky bit
+        0400    allow read by owner.
+        0200    allow write by owner.
+        0100    execute / search
+        0040    allow read by group members.
+        0020    allow write by group members.
+        0010    execute / search
+        0004    allow read by others.
+        0002    allow write by others.
+        0001    execute / search
          */
         // TODO: simplified - needs fixing
         int sum = 0;
         int bit = 1;
-        for(int i=m.length-1; i>=0 ; i--) {
+        for (int i = m.length - 1; i >= 0; i--) {
             if (m[i] != '-') {
                 sum += bit;
             }
@@ -157,9 +158,9 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
         return sum;
     }
 
-    private TarEntry readFile( final BufferedReader reader, final String base ) throws IOException, ParseError {
+    private TarEntry readFile(final BufferedReader reader, final String base) throws IOException, ParseError {
 
-        while(true) {
+        while (true) {
             final String line = reader.readLine();
 
             if (line == null) {
@@ -177,7 +178,12 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
 
             final String type = currentMatcher.group(1);
             if (type.startsWith("-")) {
-                final TarEntry entry = new TarEntry(base + "/" + currentMatcher.group(8));
+                TarEntry entry;
+                if(base.equals("")) {
+                    entry =  new TarEntry(currentMatcher.group(8));
+                }else{
+                    entry = new TarEntry(base + "/" + currentMatcher.group(8));
+                }
 
                 entry.setMode(convertModeFromString(currentMatcher.group(2)));
                 entry.setUserName(currentMatcher.group(4));
@@ -189,20 +195,20 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
 
     }
 
-    private Map parse( final InputStream pInput ) throws IOException, ParseError {
-        final Map mapping = new HashMap();
+    private Map parse(final InputStream pInput) throws IOException, ParseError {
+        final Map parseMapping = new HashMap();
 
         final BufferedReader reader = new BufferedReader(new InputStreamReader(pInput));
 
         boolean first = true;
-        while(true) {
+        while (true) {
 
             final String base;
             if (first) {
                 base = "";
                 first = false;
             } else {
-                base = readBase(reader);
+                base = readNewBase(reader);
                 if (base == null) {
                     break;
                 }
@@ -210,29 +216,36 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
 
             readTotal(reader);
             final TarEntry dir = readDir(reader, base);
-            mapping.put(dir.getName(), dir);
+            parseMapping.put(dir.getName(), dir);
 
-            while(true) {
+            while (true) {
                 final TarEntry file = readFile(reader, base);
 
                 if (file == null) {
                     break;
                 }
-
-                mapping.put(file.getName(), file);
+                Utils.getLog().debug(String.format("Adding \"%s\" to mapping\n",file.getName()));
+                parseMapping.put(file.getName(), file);
             }
         }
 
-        return mapping;
+        return parseMapping;
     }
 
-    public TarEntry map( final TarEntry pEntry ) {
+    @Override
+    public TarEntry map(final TarEntry pEntry) {
 
         final TarEntry entry = (TarEntry) mapping.get(pEntry.getName());
 
         if (entry != null) {
 
-            final TarEntry newEntry = new TarEntry(entry.getName());
+            final TarEntry newEntry;            
+            if (prefix != null && !prefix.equals("")) {
+                newEntry = new TarEntry(prefix + '/' + Utils.stripPath(strip, pEntry.getName()));
+            } else {
+                newEntry = new TarEntry(entry.getName());
+            }
+            Utils.getLog().debug(String.format("New LsMapper TarEntry entry: %s\n",newEntry.getName()));
             newEntry.setUserId(entry.getUserId());
             newEntry.setGroupId(entry.getGroupId());
             newEntry.setUserName(entry.getUserName());
@@ -242,8 +255,7 @@ drwxr-xr-x    4 tcurdt  tcurdt   136 Jun 25 03:48 classes
 
             return newEntry;
         }
-
+        Utils.getLog().debug(String.format("LsMapper: No map for \"%s\" found returning null\n",pEntry.getName()));
         return pEntry;
     }
-
 }

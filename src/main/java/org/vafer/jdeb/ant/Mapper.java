@@ -97,7 +97,7 @@ public final class Mapper {
 
         if ("ls".equalsIgnoreCase(mapperType)) {
             try {
-                return new LsMapper(new FileInputStream(src));
+                return new LsMapper(new FileInputStream(src),strip,prefix);
             } catch (Exception e) {
                 e.printStackTrace();
             }

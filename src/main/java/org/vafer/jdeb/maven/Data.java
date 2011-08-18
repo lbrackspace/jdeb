@@ -22,11 +22,14 @@ import java.util.ArrayList;
 
 import java.util.List;
 import java.util.StringTokenizer;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 import org.vafer.jdeb.DataConsumer;
 import org.vafer.jdeb.DataProducer;
 import org.vafer.jdeb.producers.DataProducerArchive;
 import org.vafer.jdeb.producers.DataProducerDirectory;
 import org.vafer.jdeb.producers.DataProducerFile;
+import org.vafer.jdeb.utils.Utils;
 
 /**
  * Maven "data" elment acting as a factory for DataProducers. So far Archive and
@@ -38,7 +41,6 @@ import org.vafer.jdeb.producers.DataProducerFile;
 public final class Data implements DataProducer {
 
     private File src;
-
     /**
      * @parameter expression="${src}"
      * @required
@@ -100,8 +102,11 @@ public final class Data implements DataProducer {
 
         org.vafer.jdeb.mapping.Mapper[] mappers = null;
         if (mapper != null) {
-            mappers = new org.vafer.jdeb.mapping.Mapper[] { mapper.createMapper() };
+            mappers = new org.vafer.jdeb.mapping.Mapper[] { mapper.createMapper() };            
         }
+        String format = "Using src=%s mapper{class=%s }\n";
+        String msg = String.format(format,src.getAbsolutePath(),mappers[0].getClass().getName());
+        Utils.getLog().debug(msg);
 
         if ("file".equalsIgnoreCase(type)) {
             new DataProducerFile(src, includePatterns, excludePatterns, mappers).produce(pReceiver);

@@ -22,6 +22,7 @@ import org.vafer.jdeb.mapping.LsMapper;
 import org.vafer.jdeb.mapping.NullMapper;
 import org.vafer.jdeb.mapping.PermMapper;
 import org.vafer.jdeb.mapping.PrefixMapper;
+import org.vafer.jdeb.utils.Utils;
 
 /**
  * Maven "mapper" element acting as factory for the entry mapper.
@@ -84,7 +85,8 @@ public final class Mapper {
 
 
     public org.vafer.jdeb.mapping.Mapper createMapper() {
-
+        String format = "Mapper called with {prefix=%s src=%s strip=%d filemode=%s dirmode=%s}\n";
+        Utils.getLog().debug(String.format(format,prefix,src,strip,filemode,dirmode));
         if ("perm".equalsIgnoreCase(type)) {
             return new PermMapper(uid, gid, user, group, filemode, dirmode, strip, prefix);
         }
@@ -95,7 +97,7 @@ public final class Mapper {
 
         if ("ls".equalsIgnoreCase(type)) {
             try {
-                return new LsMapper(new FileInputStream(src));
+                return new LsMapper(new FileInputStream(src),strip,prefix);
             } catch (Exception e) {
                 e.printStackTrace();
             }

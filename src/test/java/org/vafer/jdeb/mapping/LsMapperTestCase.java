@@ -49,7 +49,7 @@ public final class LsMapperTestCase extends TestCase {
     public void testModes() throws Exception {
         final ByteArrayInputStream is = new ByteArrayInputStream(output.getBytes("UTF-8"));
         
-        final Mapper mapper = new LsMapper(is);
+        final Mapper mapper = new LsMapper(is,0,"");
 
         final TarEntry entry1 = mapper.map(new TarEntry("trunk/target/test-classes/org/vafer/dependency"));
         
@@ -67,7 +67,7 @@ public final class LsMapperTestCase extends TestCase {
     public void testSuccessfulParsing() throws Exception {
         final ByteArrayInputStream is = new ByteArrayInputStream(output.getBytes("UTF-8"));
         
-        final Mapper mapper = new LsMapper(is);
+        final Mapper mapper = new LsMapper(is,0,"");
         
         final TarEntry unknown = new TarEntry("xyz");
         assertSame(unknown, mapper.map(unknown));
@@ -83,17 +83,17 @@ public final class LsMapperTestCase extends TestCase {
         final ByteArrayInputStream is = new ByteArrayInputStream(output.substring(0, 200).getBytes("UTF-8"));
         
         try {
-            new LsMapper(is);
+            new LsMapper(is,0,"");
             fail("should fail to parse");
         } catch(ParseError e) {         
         }       
     }
     
     public void testWrongFormat() throws Exception {
-        final ByteArrayInputStream is = new ByteArrayInputStream("asas\n".getBytes("UTF-8"));
+        final ByteArrayInputStream is = new ByteArrayInputStream("asas\nxxxx\nxxxx\nxxxx\n".getBytes("UTF-8"));
         
         try {
-            new LsMapper(is);
+            LsMapper lsMapper = new LsMapper(is, 0, "");
             fail("should fail to parse");
         } catch(ParseError e) {         
         }               

@@ -19,6 +19,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.text.ParseException;
+import org.apache.maven.plugin.logging.Log;
+import org.apache.maven.plugin.logging.SystemStreamLog;
 
 
 /**
@@ -29,6 +31,11 @@ import java.text.ParseException;
  * @author Torsten Curdt <tcurdt@vafer.org>
  */
 public final class Utils {
+
+    public static Log getLog(){
+        SystemStreamLog log = new SystemStreamLog();
+        return log;
+    }
 
     public static int copy( final InputStream pInput, final OutputStream pOutput ) throws IOException {
         final byte[] buffer = new byte[2048];

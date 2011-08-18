@@ -58,6 +58,7 @@ public final class PermMapper extends PrefixMapper {
         this(-1, -1, user, group, toMode(fileMode), toMode(dirMode), strip, prefix);
     }
 
+    @Override
     public TarEntry map(final TarEntry entry) {
         final String name = entry.getName();
 
