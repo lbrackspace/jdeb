@@ -86,7 +86,7 @@ public final class Mapper {
 
     public org.vafer.jdeb.mapping.Mapper createMapper() {
         String format = "Mapper called with {prefix=%s src=%s strip=%d filemode=%s dirmode=%s}\n";
-        Utils.getLog().debug(String.format(format,prefix,src,strip,filemode,dirmode));
+        Utils.getLog().info(String.format(format,prefix,src,strip,filemode,dirmode));
         if ("perm".equalsIgnoreCase(type)) {
             return new PermMapper(uid, gid, user, group, filemode, dirmode, strip, prefix);
         }

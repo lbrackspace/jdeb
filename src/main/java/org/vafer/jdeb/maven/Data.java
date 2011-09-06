@@ -106,7 +106,7 @@ public final class Data implements DataProducer {
         }
         String format = "Using src=%s mapper{class=%s }\n";
         String msg = String.format(format,src.getAbsolutePath(),mappers[0].getClass().getName());
-        Utils.getLog().debug(msg);
+        Utils.getLog().info(msg);
 
         if ("file".equalsIgnoreCase(type)) {
             new DataProducerFile(src, includePatterns, excludePatterns, mappers).produce(pReceiver);

@@ -224,7 +224,7 @@ public final class LsMapper extends PrefixMapper {
                 if (file == null) {
                     break;
                 }
-                Utils.getLog().debug(String.format("Adding \"%s\" to mapping\n",file.getName()));
+                Utils.getLog().info(String.format("Adding \"%s\" to mapping\n",file.getName()));
                 parseMapping.put(file.getName(), file);
             }
         }
@@ -245,7 +245,7 @@ public final class LsMapper extends PrefixMapper {
             } else {
                 newEntry = new TarEntry(entry.getName());
             }
-            Utils.getLog().debug(String.format("New LsMapper TarEntry entry: %s\n",newEntry.getName()));
+            Utils.getLog().info(String.format("New LsMapper TarEntry entry: %s\n",newEntry.getName()));
             newEntry.setUserId(entry.getUserId());
             newEntry.setGroupId(entry.getGroupId());
             newEntry.setUserName(entry.getUserName());
@@ -255,7 +255,7 @@ public final class LsMapper extends PrefixMapper {
 
             return newEntry;
         }
-        Utils.getLog().debug(String.format("LsMapper: No map for \"%s\" found returning null\n",pEntry.getName()));
+        Utils.getLog().info(String.format("LsMapper: No map for \"%s\" found returning null\n",pEntry.getName()));
         return pEntry;
     }
 }
